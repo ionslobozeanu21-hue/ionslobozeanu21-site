@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cum Funcționează Creierul</title>
+    <style>
+        :root {
+            --brand-green: #00ff7f;
+            --bg-black: #000000;
+            --gray-border: #444;
+            --transition-speed: 0.5s;
+            --content-transition: 0.8s;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-black);
+            color: white;
+            font-family: "Comic Sans MS", "Comic Sans", cursive, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #app-viewport {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+
+        /* PANOU STÂNGA - PĂTRAT CU MARGINI ROTUNJITE */
+        #left-panel {
+            width: 50%;
+            height: 100%;
+            background-color: var(--brand-green);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            border-radius: 0 40px 40px 0; 
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+        }
+
+        .title-group {
+            text-align: left;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        #main-title {
+            color: black;
+            font-size: 4rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 25px;
+        }
+
+        .quote-container {
+            color: rgba(0,0,0,0.7);
+            border-left: 3px solid rgba(0,0,0,0.3);
+            padding-left: 20px;
+            font-style: italic;
+        }
+
+        .quote-text {
+            font-size: 1.1rem;
+            line-height: 1.4;
+            margin-bottom: 5px;
+        }
+
+        .quote-author {
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #home-icon {
+            display: none;
+            width: 35px;
+            height: 35px;
+            fill: white;
+        }
+
+        /* PANOU DREAPTA - FUNDAL CU EFECT DE FADE */
+        #right-panel {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding-left: 80px;
+            gap: 20px;
+            position: relative;
+            background-color: var(--bg-black);
+            transition: opacity 0.6s ease;
+        }
+
+        #bg-image-layer {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.35;
+            z-index: 0;
+            transition: opacity 0.8s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            pointer-events: none;
+        }
+
+        .bg-neural-svg {
+            width: 90%;
+            height: 100%;
+            stroke: #444;
+            stroke-width: 1.2;
+            fill: none;
+            /* Mască gradient pentru fuziunea cu negrul ecranului */
+            mask-image: linear-gradient(to right, transparent 5%, black 100%);
+            -webkit-mask-image: linear-gradient(to right, transparent 5%, black 100%);
+        }
+
+        /* Animație fină de licărire pentru detaliile dinamice */
+        .glow-line {
+            stroke: var(--brand-green);
+            stroke-width: 1.5;
+            opacity: 0.3;
+            animation: pulseGlowLine 4s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlowLine {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 0.45; }
+        }
+
+        /* BUTOANE MENIU */
+        .menu-btn {
+            position: relative;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--gray-border);
+            border-radius: 12px;
+            padding: 18px 30px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 340px;
+            text-align: left;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            z-index: 1;
+        }
+
+        .btn-fill {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background-color: var(--brand-green);
+            transition: left 0.4s ease;
+            z-index: -1;
+        }
+
+        .menu-btn:hover {
+            transform: translateX(15px);
+            border-color: var(--brand-green);
+            color: black;
+        }
+
+        .menu-btn:hover .btn-fill {
+            left: 0;
+        }
+
+        /* STARE CORESPONDENTĂ SELECTĂRII: AFIȘARE CONȚINUT */
+        body.content-active #left-panel {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            background-color: #333;
+            position: fixed; /* Schimbat în FIXED pentru a preveni deplasarea din ecran la scroll-ul elementelor */
+            top: 20px;
+            left: 20px;
+            padding: 0;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            z-index: 100; /* Asigură menținerea deasupra tuturor elementelor */
+        }
+
+        body.content-active .title-group { display: none; }
+        body.content-active #home-icon { display: block; margin: auto; }
+
+        body.content-active #right-panel {
+            position: absolute;
+            top: 120px;
+            left: 20px;
+            width: 280px;
+            padding: 0;
+            justify-content: flex-start;
+            gap: 12px;
+            background: none;
+        }
+
+        body.content-active #bg-image-layer {
+            opacity: 0;
+        }
+
+        body.content-active .menu-btn {
+            width: 260px;
+            font-size: 0.9rem;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        body.content-active .menu-btn.pressed {
+            width: 280px;
+            background-color: var(--brand-green);
+            border-color: var(--brand-green);
+            color: black;
+        }
+
+        /* ZONĂ CONȚINUT */
+        #content-area {
+            position: absolute;
+            right: -100%;
+            top: 0;
+            width: calc(100% - 340px);
+            height: 100%;
+            padding: 60px;
+            transition: right var(--content-transition) cubic-bezier(0.19, 1, 0.22, 1);
+            overflow-y: auto;
+            opacity: 0;
+        }
+
+        body.content-active #content-area {
+            right: 0;
+            opacity: 1;
+        }
+
+        /* CONTAINER SCHIȚE MINIATURE */
+        .diagram-container {
+            width: 100%;
+            max-width: 420px; 
+            margin: 0 auto 30px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #0d0d0d;
+            border: 1px solid #333;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Ilustrații Vectoriale Minimaliste */
+        .vector-illustration {
+            width: 100%;
+            height: auto;
+            max-height: 280px;
+        }
+
+        /* Efecte de Interacțiune pe Harta Creierului */
+        .brain-part {
+            fill: #1a1a1a;
+            stroke: #555;
+            stroke-width: 1.5;
+            transition: all 0.5s ease;
+        }
+
+        .brain-part.active {
+            fill: rgba(0, 255, 127, 0.2);
+            stroke: var(--brand-green);
+            stroke-width: 2.5;
+            filter: drop-shadow(0px 0px 8px var(--brand-green));
+        }
+
+        .synapse-element {
+            stroke: #555;
+            stroke-width: 1.5;
+            fill: none;
+            transition: all 0.5s ease;
+        }
+
+        .synapse-element.active {
+            stroke: var(--brand-green);
+            stroke-width: 2.5;
+            filter: drop-shadow(0 0 8px var(--brand-green));
+        }
+
+        .vesicle {
+            fill: #555;
+            transition: all 0.5s ease;
+        }
+
+        .vesicle.active {
+            fill: var(--brand-green);
+            filter: drop-shadow(0 0 5px var(--brand-green));
+        }
+
+        .oval-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .oval-btn {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: #aaa;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .oval-btn:hover {
+            border-color: var(--brand-green);
+            color: white;
+        }
+
+        .oval-btn.active {
+            background-color: var(--brand-green);
+            border-color: var(--brand-green);
+            color: black;
+            font-weight: bold;
+        }
+
+        /* SECȚIUNE INFORMAȚII DETALIATE */
+        .info-box, .generic-box {
+            margin-top: 30px;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 30px;
+            background-color: #0d0d0d;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .info-box h3, .generic-box h3 {
+            color: var(--brand-green);
+            margin-bottom: 15px;
+            font-size: 1.6rem;
+        }
+
+        .info-box p {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #ccc;
+        }
+
+        .content-square {
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .content-square h4 {
+            color: var(--brand-green);
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-viewport">
+    <!-- Panou Stânga -->
+    <div id="left-panel" onclick="goHome()">
+        <div class="title-group">
+            <h1 id="main-title">Cum<br>Funcționează<br>Creierul</h1>
+            <div class="quote-container">
+                <p class="quote-text">„Orice om poate fi, dacă își propune, sculptorul propriului său creier.”</p>
+                <p class="quote-author">— Santiago Ramón y Cajal</p>
+            </div>
+        </div>
+        <svg id="home-icon" viewBox="0 0 24 24">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+    </div>
+
+    <!-- Panou Dreapta -->
+    <div id="right-panel">
+        <div id="bg-image-layer">
+            <!-- Schiță Vectorială Elegantă Continuous-Line Art a Creierului -->
+            <svg class="bg-neural-svg" viewBox="0 0 600 500">
+                <!-- Silhouette & Folds - Continuous Aesthetic Path Lines -->
+                <path d="M 220,380 
+                         C 180,380 140,350 120,300 
+                         C 100,250 100,180 130,140 
+                         C 160,100 220,70 300,70 
+                         C 380,70 440,100 470,140 
+                         C 500,180 500,250 480,300 
+                         C 460,350 420,380 380,380" 
+                      stroke="#333" stroke-width="2" fill="none" />
+                      
+                <path d="M 220,380 
+                         C 230,400 250,420 280,420 
+                         C 310,420 330,400 340,380" 
+                      stroke="#2a2a2a" stroke-width="1.5" fill="none" />
+
+                <!-- Deep Cortical Lobes & Sulci Line Flow -->
+                <path d="M 130,140 C 160,160 190,130 220,150 C 250,170 270,140 300,160 C 330,180 360,150 390,180 C 420,210 450,180 470,220" class="glow-line" fill="none" />
+                <path d="M 150,220 C 180,240 210,210 240,240 C 270,270 310,240 350,270 C 390,300 420,280 450,300" stroke="#252525" stroke-width="1.2" fill="none" />
+                <path d="M 210,95 C 230,130 220,170 240,200 C 260,230 290,210 320,240 C 350,270 340,320 370,350" stroke="#222" stroke-width="1.2" fill="none" />
+                <path d="M 380,95 C 370,130 380,170 360,200 C 340,230 310,210 280,240 C 250,270 260,320 230,350" stroke="#1c1c1c" stroke-width="1.2" fill="none" />
+                <path d="M 120,260 C 160,260 180,220 210,210 C 240,200 270,220 300,210 C 330,200 350,160 380,160" stroke="#2a2a2a" stroke-width="1" fill="none" />
+                
+                <!-- Continuous looping aesthetic paths -->
+                <path d="M 300,70 Q 300,220 220,320 T 380,300" class="glow-line" fill="none" />
+                <path d="M 200,120 Q 300,250 400,120" stroke="#2a2a2a" stroke-width="1" fill="none" />
+                <path d="M 150,320 C 180,280 240,280 270,320 C 300,360 360,360 390,320" stroke="#252525" stroke-width="1.2" fill="none" />
+
+                <!-- Ambient Subtle Circuit Terminals -->
+                <circle cx="280" cy="180" r="3" fill="var(--brand-green)" opacity="0.4" />
+                <circle cx="350" cy="270" r="3" fill="var(--brand-green)" opacity="0.3" />
+                <circle cx="210" cy="210" r="2.5" fill="#555" />
+                <circle cx="390" cy="160" r="2.5" fill="#555" />
+            </svg>
+        </div>
+        <button class="menu-btn" onclick="showPage('structure', this)">
+            <div class="btn-fill"></div>
+            Structura Creierului
+        </button>
+        <button class="menu-btn" onclick="showPage('hormones', this)">
+            <div class="btn-fill"></div>
+            Hormonii Creierului
+        </button>
+        <button class="menu-btn" onclick="showPage('evolution', this)">
+            <div class="btn-fill"></div>
+            Evoluție
+        </button>
+        <button class="menu-btn" onclick="showPage('adaptation', this)">
+            <div class="btn-fill"></div>
+            Adaptare și Învățare
+        </button>
+    </div>
+
+    <!-- Zonă Afișare Conținut -->
+    <div id="content-area">
+        <div id="page-content" style="width:100%"></div>
+    </div>
+</div>
+
+<script>
+    const data = {
+        structure: {
+            title: "Structura Creierului",
+            items: [
+                { 
+                    id: 1, 
+                    elementId: "part-frontal",
+                    name: "Lobul Frontal", 
+                    desc: "Lobul Frontal este centrul de comandă executiv al creierului. Situat în partea din față a craniului, acesta gestionează funcțiile cognitive superioare, inclusiv exprimarea emoțională, rezolvarea de probleme, memoria, limbajul și raționamentul. Practic, acționează ca un 'CEO' al creierului, controlând comportamentul nostru social și impulsurile, motiv pentru care leziunile din această zonă duc adesea la schimbări dramatice de personalitate." 
+                },
+                { 
+                    id: 2, 
+                    elementId: "part-parietal",
+                    name: "Lobul Parietal", 
+                    desc: "Lobul Parietal se află în spatele lobului frontal și este principalul centru de integrare senzorială. Acesta procesează informațiile din lumea exterioară legate de atingere, gust, temperatură și orientare spațială. Este cel care îți permite să înțelegi unde se află corpul tău în spațiu și te ajută să manipulezi obiecte sau să rezolvi probleme matematice prin crearea unei hărți mentale a mediului înconjurător." 
+                },
+                { 
+                    id: 3, 
+                    elementId: "part-temporal",
+                    name: "Lobul Temporal", 
+                    desc: "Situat chiar deasupra urechilor, Lobul Temporal este esențial pentru procesarea auditivă și codificarea memoriei. Conține cortexul auditiv primar și este vital pentru interpretarea sunetelor și a limbajului pe care îl auzim. În plus, joacă un rol cheie în memoria vizuală, permițându-ne să recunoaștem fețe și obiecte prin corelarea lor cu informațiile stocate anterior." 
+                },
+                { 
+                    id: 4, 
+                    elementId: "part-occipital",
+                    name: "Lobul Occipital", 
+                    desc: "Situat în partea din spate a creierului, Lobul Occipital este dedicat aproape în întregime vederii. Acesta decodifică semnalele complexe trimise de ochi, transformându-le în forme, culori și mișcare. Fără acest lob, chiar dacă ochii tăi ar fi perfect sănătoși, nu ai putea să 'vezi' lumea, deoarece creierul nu ar avea cum să proceseze lumina în imagini coerente." 
+                },
+                { 
+                    id: 5, 
+                    elementId: "part-cerebellum",
+                    name: "Cerebelul", 
+                    desc: "Numit adesea 'creierul mic', Cerebelul conține mai mulți neuroni decât restul creierului la un loc. Deși nu inițiază mișcarea, este maestrul coordonării, preciziei și sincronizării. Primește informațiile senzoriale și ajustează activitatea motorie, asigurându-se că mișcările tale sunt fluide și echilibrate, în loc să fie sacadate și dezorganizate." 
+                }
+            ]
+        },
+        hormones: {
+            title: "Hormonii Creierului",
+            items: [
+                { 
+                    id: 1, 
+                    elementId: "synapse-pre",
+                    name: "Dopamina", 
+                    desc: "Numită adesea 'substanța plăcerii', Dopamina este de fapt legată mai mult de motivație și anticipare decât de recompensa în sine. Esențială pentru sistemul de recompensă al creierului, ne determină să repetăm comportamente vitale pentru supraviețuire. Dereglarea dopaminei este asociată cu dependența și boala Parkinson, evidențiind rolul său atât în determinarea mentală, cât și în mișcarea fizică." 
+                },
+                { 
+                    id: 2, 
+                    elementId: "synapse-post",
+                    name: "Serotonina", 
+                    desc: "Serotonina este hormonul cheie care ne stabilizează starea de spirit, sentimentele de bine și fericirea. Dincolo de emoție, influențează întregul corp, ajutând la reglarea somnului, a poftei de mâncare și a digestiei. Este extrem de cunoscută în contextul sănătății mintale, majoritatea antidepresivelor acționând prin creșterea disponibilității sale în sinapsele creierului." 
+                },
+                { 
+                    id: 3, 
+                    elementId: "vesicle-1",
+                    name: "Oxitocina", 
+                    desc: "Etichetată frecvent ca 'hormonul iubirii' sau 'substanța atașamentului', Oxitocina este un neurotransmițător puternic care acționează ca un liant social. Este eliberată în timpul atingerilor fizice, la naștere și în timpul interacțiunilor de bonding. Ea reduce stresul și anxietatea prin suprimarea activității amigdalei (centrul fricii) și prin sporirea încrederii." 
+                },
+                { 
+                    id: 4, 
+                    elementId: "vesicle-2",
+                    name: "Adrenalina", 
+                    desc: "Produsă în situații de stres ridicat sau excitație, Adrenalina (Epinefrina) pregătește organismul pentru răspunsul de tip 'luptă sau fugi'. În creier, aceasta intensifică atenția și crește vigilența, în timp ce fizic accelerează ritmul cardiac și fluxul de sânge către mușchi pentru a asigura un aport maxim de energie." 
+                }
+            ]
+        }
+    };
+
+    function showPage(type, btn) {
+        document.body.classList.add('content-active');
+        document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('pressed'));
+        btn.classList.add('pressed');
+
+        const content = document.getElementById('page-content');
+        
+        if (type === 'evolution' || type === 'adaptation') {
+            const isEvo = type === 'evolution';
+            content.innerHTML = `
+                <div class="generic-box visible">
+                    <h3>${isEvo ? 'Evoluția Inteligenței' : 'Adaptare și Învățare'}</h3>
+                    <div class="content-square">
+                        <h4>${isEvo ? 'Avantajul Uman' : 'Neuroplasticitatea'}</h4>
+                        <p>${isEvo ? 'Creierul uman a evoluat având un cortex prefrontal masiv în comparație cu alte mamifere. Această zonă permite planificarea complexă, raționamentul abstract și suprimarea impulsurilor primare.' : 'Neuroplasticitatea reprezintă capacitatea creierului de a se reorganiza prin formarea de noi conexiuni neuronale. De fiecare dată când înveți o abilitate nouă, creierul tău își modifică fizic rețeaua internă de cablare.'}</p>
+                    </div>
+                    <div class="content-square">
+                        <h4>${isEvo ? 'Creierul Social' : 'Recunoașterea de Modele'}</h4>
+                        <p>${isEvo ? 'Supraviețuirea oamenilor a depins de traiul în grupuri sociale mari și complexe. Evoluția a favorizat creierele capabile să citească expresii faciale, să prezică comportamente sociale și să coopereze prin limbaj.' : 'Creierele noastre sunt, în esență, mașini sofisticate de predicție. Învățăm prin identificarea modelelor din mediul înconjurător și prin utilizarea lor pentru a prognoza evenimente viitoare.'}</p>
+                    </div>
+                    <div class="content-square">
+                        <h4>${isEvo ? 'Dieta și Focul' : 'Limbaj și Cultură'}</h4>
+                        <p>${isEvo ? 'Descoperirea focului pentru gătit a permis strămoșilor noștri să extragă mai multă energie din alimente, hrănind cel mai costisitor organ din punct de vedere metabolic: creierul.' : 'Încă din pruncie, creierul este acordat la mediul lingvistic specific părinților, eliminând treptat căile nefolosite pentru a deveni un specialist în limba maternă.'}</p>
+                    </div>
+                </div>
+            `;
+        } else if (type === 'structure') {
+            const page = data.structure;
+            content.innerHTML = `
+                <div class="diagram-container">
+                    <!-- Schiță Vectorială Interactivă a Creierului -->
+                    <svg class="vector-illustration" viewBox="0 0 200 160">
+                        <!-- Lobul Frontal -->
+                        <path id="part-frontal" class="brain-part" d="M 40,80 C 35,50 60,30 95,30 C 105,30 110,40 110,65 C 110,90 90,110 40,80 Z" />
+                        <!-- Lobul Parietal -->
+                        <path id="part-parietal" class="brain-part" d="M 95,30 C 130,30 160,50 160,75 C 160,90 145,100 120,95 C 110,75 110,40 95,30 Z" />
+                        <!-- Lobul Occipital -->
+                        <path id="part-occipital" class="brain-part" d="M 160,75 C 180,90 175,115 155,115 C 145,115 135,105 120,95 C 145,100 160,90 160,75 Z" />
+                        <!-- Lobul Temporal -->
+                        <path id="part-temporal" class="brain-part" d="M 110,65 C 120,95 120,95 120,115 C 90,120 75,100 60,95 C 80,90 110,75 110,65 Z" />
+                        <!-- Cerebelul -->
+                        <path id="part-cerebellum" class="brain-part" d="M 155,115 C 165,130 145,145 125,140 C 115,135 125,120 135,115 C 145,115 150,110 155,115 Z" />
+                        <!-- Trunchiul Cerebral -->
+                        <path d="M 100,115 Q 105,150 112,155 Q 118,150 115,115 Z" fill="#222" stroke="#555" stroke-width="1.5" />
+                    </svg>
+                </div>
+                <div class="oval-container">
+                    ${page.items.map(item => `
+                        <button class="oval-btn" onclick="showInfo(${item.id}, this, 'structure')">
+                            ${item.name}
+                        </button>
+                    `).join('')}
+                </div>
+                <div id="info-box-el" class="info-box" style="display:none"></div>
+            `;
+        } else if (type === 'hormones') {
+            const page = data.hormones;
+            content.innerHTML = `
+                <div class="diagram-container">
+                    <!-- Schiță Vectorială Interactivă a Sinapsei -->
+                    <svg class="vector-illustration" viewBox="0 0 200 160">
+                        <!-- Terminalul Presinaptic -->
+                        <path id="synapse-pre" class="synapse-element" d="M 40,20 Q 100,20 100,60 Q 100,100 40,100" />
+                        <!-- Membrana Postsinaptică -->
+                        <path id="synapse-post" class="synapse-element" d="M 160,20 Q 120,20 120,65 Q 120,110 160,110" />
+                        
+                        <!-- Vezicule Sinaptice -->
+                        <circle id="vesicle-1" class="vesicle" cx="65" cy="45" r="6" />
+                        <circle id="vesicle-2" class="vesicle" cx="75" cy="75" r="6" />
+                        <circle class="vesicle" cx="50" cy="60" r="4" />
+                        
+                        <!-- Neurotransmițători liberi în fanta sinaptică -->
+                        <circle cx="110" cy="45" r="2" fill="var(--brand-green)" />
+                        <circle cx="112" cy="70" r="2" fill="var(--brand-green)" />
+                        <circle cx="108" cy="85" r="2" fill="var(--brand-green)" />
+                    </svg>
+                </div>
+                <div class="oval-container">
+                    ${page.items.map(item => `
+                        <button class="oval-btn" onclick="showInfo(${item.id}, this, 'hormones')">
+                            ${item.name}
+                        </button>
+                    `).join('')}
+                </div>
+                <div id="info-box-el" class="info-box" style="display:none"></div>
+            `;
+        }
+    }
+
+    function showInfo(id, btn, type) {
+        const box = document.getElementById('info-box-el');
+        const isActive = btn.classList.contains('active');
+        
+        // Resetare stare butoane
+        document.querySelectorAll('.oval-btn').forEach(b => b.classList.remove('active'));
+        
+        // Resetare evidențieri vectoriale interactive
+        document.querySelectorAll('.brain-part, .synapse-element, .vesicle').forEach(el => {
+            el.classList.remove('active');
+        });
+        
+        if (isActive) {
+            box.style.display = 'none';
+        } else {
+            btn.classList.add('active');
+            const item = data[type].items.find(i => i.id === id);
+            box.innerHTML = `<h3>${item.name}</h3><p>${item.desc}</p>`;
+            box.style.display = 'block';
+            box.classList.add('visible');
+            
+            // Evidențiere element vectorial corespondent
+            const vectorTarget = document.getElementById(item.elementId);
+            if (vectorTarget) {
+                vectorTarget.classList.add('active');
+            }
+
+            // Derulare sigură și exclusivă în interiorul containerului de conținut
+            setTimeout(() => {
+                const container = document.getElementById('content-area');
+                if (container) {
+                    container.scrollTo({
+                        top: box.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 100);
+        }
+    }
+
+    function goHome() {
+        document.body.classList.remove('content-active');
+        document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('pressed'));
+        document.getElementById('page-content').innerHTML = '';
+    }
+</script>
+
+</body>
+</html>
